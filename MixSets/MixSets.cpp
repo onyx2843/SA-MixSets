@@ -192,7 +192,7 @@ MixSets::MixSets()
 
 						if (player)
 						{
-							if (player->m_nPedFlags.bInVehicle)
+							if (player->bInVehicle)
 							{
 								bPlayerRenderWeaponInVehicleLastFrame = true;
 								int camMode = TheCamera.m_aCams[0].m_nMode;
@@ -577,7 +577,7 @@ MixSets::MixSets()
 			{
 				if (vehicle->m_nModelIndex == MODEL_TAXI || vehicle->m_nModelIndex == MODEL_CABBIE)
 				{
-					if (vehicle->m_pDriver && vehicle->m_nNumPassengers == 0 && vehicle->m_nVehicleFlags.bEngineOn && vehicle->m_fHealth > 0.0f)
+					if (vehicle->m_pDriver && vehicle->m_nNumPassengers == 0 && vehicle->bEngineOn && vehicle->m_fHealth > 0.0f)
 					{
 						automobile->SetTaxiLight(true);
 					}

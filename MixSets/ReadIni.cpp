@@ -231,7 +231,7 @@ void MixSets::ReadIni_BeforeFirstFrame()
 					regs.eax = *(uint32_t*)(regs.esi + 0x598);
 
 					CPed* ped = (CPed*)regs.esi;
-					if (ped->m_pIntelligence->m_TaskMgr.FindActiveTaskByType(TASK_COMPLEX_ENTER_CAR_AS_DRIVER) || (ped->m_nPedFlags.bInVehicle && ped->m_pVehicle))
+					if (ped->m_pIntelligence->m_TaskMgr.FindActiveTaskByType(TASK_COMPLEX_ENTER_CAR_AS_DRIVER) || (ped->bInVehicle && ped->m_pVehicle))
 					{
 						if (ped->m_pShadowData)
 						{
@@ -264,13 +264,13 @@ void MixSets::ReadIni_BeforeFirstFrame()
 				uint8_t bShadowNeeded = *(uint8_t*)(regs.esp + 0x80 - 0x6E);
 				CPed* ped = (CPed*)regs.ebp;
 
-				bool showShadow = bShadowNeeded || !ped->m_nPedFlags.bInVehicle;
+				bool showShadow = bShadowNeeded || !ped->bInVehicle;
 
 				if (G_NoStencilShadows && ((g_fx.GetFxQuality() >= 2 && ped->IsPlayer()) || (g_fx.GetFxQuality() >= 3))) {
 					showShadow = false;
 				}
 
-				if (ped->m_nPedFlags.bInVehicle && ped->m_pVehicle)
+				if (ped->bInVehicle && ped->m_pVehicle)
 				{
 					if (G_StaticPedShadOnBike)
 					{
@@ -478,7 +478,7 @@ void MixSets::ReadIni_BeforeFirstFrame()
 
 	if (ReadIniBool(ini, &lg, "New_Additions", "NoPedRain")) {
 
-		if (bReloading)
+		if (!bReloading)
 			WriteMemory<uint32_t>(0x5E7235, 0x858C34, true);
 	}
 
@@ -512,6 +512,22 @@ void MixSets::ReadIni_BeforeFirstFrame()
 	else
 	{
 		MixSets::G_StaticCarCamera = false;
+	}
+
+	if (ReadIniBool(ini, &lg, "New_Additions", "NoWindBikeAnim")) {
+		char patchData1[] = { '\x90' };
+		char patchData2[] = { '\xE9' };
+
+		patch::SetRaw(0x6B7EB5, (void*)patchData1, sizeof(patchData1));
+		patch::SetRaw(0x6B7EB6, (void*)patchData2, sizeof(patchData2));
+	}
+	else
+	{
+		char patchData1[] = { '\x0F' };
+		char patchData2[] = { '\x85' };
+
+		patch::SetRaw(0x6B7EB5, (void*)patchData1, sizeof(patchData1));
+		patch::SetRaw(0x6B7EB6, (void*)patchData2, sizeof(patchData2));
 	}
 
 
@@ -1031,13 +1047,13 @@ void MixSets::ReadIni()
 	if ((!inSAMP || (inSAMP && rpSAMP)) && ReadIniBool(ini, &lg, "Gameplay", "VehBurnEngineBroke")) {
 		injector::MakeInline<0x006A70ED, 0x006A70F3>([](injector::reg_pack& regs) {
 			auto vehicle = (CVehicle*)regs.esi;
-			vehicle->m_nVehicleFlags.bEngineOn = false;
+			vehicle->bEngineOn = false;
 			regs.eax = *(DWORD*)(regs.esi + 0x57C); //original code
 			});
 
 		injector::MakeInline<0x006A75F9, 0x006A75FF>([](injector::reg_pack& regs) {
 			auto vehicle = (CVehicle*)regs.esi;
-			if (vehicle->m_fHealth > 0.0f) vehicle->m_nVehicleFlags.bEngineOn = true;
+			if (vehicle->m_fHealth > 0.0f) vehicle->bEngineOn = true;
 			*(DWORD*)(regs.esi + 0x57C) = regs.edi; //original code
 			});
 	}
@@ -1121,7 +1137,7 @@ void MixSets::ReadIni()
 					regs.eax = *(uint32_t*)(regs.esi + 0x594); // mov     eax, [esi+594h]
 
 					CVehicle* vehicle = (CVehicle*)regs.esi;
-					if (!vehicle->m_nVehicleFlags.bIsRCVehicle && !(vehicle->m_pDriver && vehicle->m_pDriver->m_nCreatedBy == 2 && vehicle->m_nCreatedBy == eVehicleCreatedBy::MISSION_VEHICLE)) {
+					if (!vehicle->bIsRCVehicle && !(vehicle->m_pDriver && vehicle->m_pDriver->m_nCreatedBy == 2 && vehicle->m_nCreatedBy == eVehicleCreatedBy::MISSION_VEHICLE)) {
 						if (regs.ebx == 51 || regs.ebx == 37) { // explosion or fire
 							if (G_VehExploDamage != -1.0) { // check it because the var may be updated by ini reloading
 								if (regs.ebx == 51) {
