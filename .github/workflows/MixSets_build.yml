@@ -33,7 +33,7 @@ jobs:
 
       - name: Build
         run: |
-          msbuild MixSets.slnx `
+          msbuild MixSets.sln `
             /p:Configuration="GTASA Release" `
             /p:Platform=x86 `
             /p:OutDir="$env:GITHUB_WORKSPACE\build\" `
